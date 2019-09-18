@@ -92,7 +92,7 @@ end
 @test isbday(:NullHolidayCalendar, Dates.Date(2016,9,25)) == true
 @test isbday("NullHolidayCalendar", Dates.Date(2016,9,25)) == true
 @test bdayscount(:NullHolidayCalendar, Dates.Date(2016,9,25), Dates.Date(2016,9,28)) == 3
-@test bdays(:NullHolidayCalendar, Dates.Date(2016,9,25), Dates.Date(2016,9,28)) == Dates.Dates.Day(3)
+@test bdays(:NullHolidayCalendar, Dates.Date(2016,9,25), Dates.Date(2016,9,28)) == Dates.Day(3)
 
 @test isholiday(BusinessDays.WeekendsOnly(), Dates.Date(2016,9,25)) == false
 @test isholiday(:WeekendsOnly, Dates.Date(2016,9,25)) == false
@@ -101,7 +101,36 @@ end
 @test isbday(:WeekendsOnly, Dates.Date(2016,9,25)) == false
 @test isbday("WeekendsOnly", Dates.Date(2016,9,25)) == false
 @test bdayscount(:WeekendsOnly, Dates.Date(2016,9,25), Dates.Date(2016,9,28)) == 2
-@test bdays(:WeekendsOnly, Dates.Date(2016,9,25), Dates.Date(2016,9,28)) == Dates.Dates.Day(2)
+
+function test_bdays(cal, d0::Dates.Date, d1::Dates.Date, expected_result::Integer)
+    @test bdays(cal, d0, d1) == Dates.Day(expected_result)
+    if d0 != d1
+        @test bdays(cal, d1, d0) == Dates.Day(-expected_result)
+    end
+    nothing
+end
+
+function test_bdays(cal,
+        d0::Tuple{Int, Int, Int},
+        d1::Tuple{Int, Int, Int},
+        expected_result::Integer)
+
+    test_bdays(cal, Dates.Date(d0[1], d0[2], d0[3]), Dates.Date(d1[1], d1[2], d1[3]), expected_result)
+end
+
+test_bdays(:WeekendsOnly, (2016, 9, 25), (2016, 9, 28), 2)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 9, 2), 5)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 9, 3), 6)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 9, 9), 10)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 9, 10), 11)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 8, 30), 4)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 8, 27), 1)
+test_bdays(:WeekendsOnly, (2019, 8, 26), (2019, 8, 26), 0)
+test_bdays(:WeekendsOnly, (2019, 8, 19), (2019, 8, 26), 5)
+test_bdays(:WeekendsOnly, (2019, 8, 25), (2019, 8, 26), 0)
+test_bdays(:WeekendsOnly, (2019, 8, 24), (2019, 8, 25), 0)
+test_bdays(:WeekendsOnly, (2019, 8, 24), (2019, 8, 26), 0)
+test_bdays(:WeekendsOnly, (2019, 8, 23), (2019, 8, 24), 1)
 
 # Brazil HolidayCalendar tests
 @test isbday(hc_brazil, Dates.Date(2014, 12, 31)) == true # wednesday
@@ -503,8 +532,8 @@ end
 @test advancebdays("Brazil", Dates.Date(2013, 02, 06), 3) == Dates.Date(2013, 02, 13) # after carnaval wednesday
 @test advancebdays("Brazil", Dates.Date(2013, 02, 06), 4) == Dates.Date(2013, 02, 14) # after carnaval thursday
 
-@test bdays(hc_brazil, Dates.Date(2013, 02, 06), Dates.Date(2013, 02, 06)) == Dates.Dates.Day(0)
-@test bdays(hc_brazil, Dates.Date(2013, 02, 06), Dates.Date(2013, 02, 07)) == Dates.Dates.Day(1)
+@test bdays(hc_brazil, Dates.Date(2013, 02, 06), Dates.Date(2013, 02, 06)) == Dates.Day(0)
+@test bdays(hc_brazil, Dates.Date(2013, 02, 06), Dates.Date(2013, 02, 07)) == Dates.Day(1)
 @test bdays(hc_brazil, Dates.Date(2013, 02, 07), Dates.Date(2013, 02, 06)).value == -1
 @test bdays(hc_brazil, Dates.Date(2013, 02, 06), Dates.Date(2013, 02, 08)).value == 2
 @test bdays(hc_brazil, Dates.Date(2013, 02, 08), Dates.Date(2013, 02, 06)).value == -2
